@@ -5,7 +5,7 @@ data/
 *.7z
 
 # Model Weights and Training Logs
-models/checkpoints/
+# models/checkpoints/
 models/logs/
 *.pth
 *.onnx
