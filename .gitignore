@@ -1,0 +1,46 @@
+# Dataset and Large Media
+data/
+*.zip
+*.tar.gz
+*.7z
+
+# Model Weights and Training Logs
+models/checkpoints/
+models/logs/
+*.pth
+*.onnx
+
+# Python and Project Environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# VS Code and OS related
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebooks
+.ipynb_checkpoints/

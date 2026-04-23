@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAI | Multimodal Radiology Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-microscope"></i>
+                <span>MedAI <span>Assistant</span></span>
+            </div>
+            <div id="status-badge" class="status-badge checking">
+                <span class="dot"></span>
+                <span class="status-text">Checking System...</span>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h1>AI-Powered <span>Radiology Reports</span></h1>
+                <p>Upload Chest X-Ray studies (AP, PA, and Lateral) to generate high-fidelity clinical findings and impressions using deep learning.</p>
+            </section>
+
+            <div class="dashboard-grid">
+                <!-- Upload Section -->
+                <div class="card upload-card glass">
+                    <div class="card-header">
+                        <h2><i class="fas fa-file-medical"></i> Image Uploads</h2>
+                        <span class="help-text">Up to 3 views supported</span>
+                    </div>
+                    
+                    <div class="upload-zones">
+                        <div class="upload-zone" id="zone-ap">
+                            <input type="file" id="input-ap" accept="image/*" hidden>
+                            <div class="zone-content">
+                                <i class="fas fa-camera-retro"></i>
+                                <span>AP View</span>
+                                <p>Click or drag image</p>
+                            </div>
+                            <div class="preview-container" id="preview-ap"></div>
+                        </div>
+
+                        <div class="upload-zone" id="zone-pa">
+                            <input type="file" id="input-pa" accept="image/*" hidden>
+                            <div class="zone-content">
+                                <i class="fas fa-camera-retro"></i>
+                                <span>PA View</span>
+                                <p>Click or drag image</p>
+                            </div>
+                            <div class="preview-container" id="preview-pa"></div>
+                        </div>
+
+                        <div class="upload-zone" id="zone-lateral">
+                            <input type="file" id="input-lateral" accept="image/*" hidden>
+                            <div class="zone-content">
+                                <i class="fas fa-camera-retro"></i>
+                                <span>Lateral View</span>
+                                <p>Click or drag image</p>
+                            </div>
+                            <div class="preview-container" id="preview-lateral"></div>
+                        </div>
+                    </div>
+
+                    <button id="generate-btn" class="primary-btn disabled" disabled>
+                        <span class="btn-text">Generate Medical Report</span>
+                        <div class="loader-spinner"></div>
+                    </button>
+                </div>
+
+                <!-- Result Section -->
+                <div class="card result-card glass">
+                    <div class="card-header">
+                        <h2><i class="fas fa-notes-medical"></i> Diagnostic Results</h2>
+                        <div class="action-buttons">
+                            <button id="copy-btn" class="icon-btn" title="Copy to clipboard"><i class="far fa-copy"></i></button>
+                            <button id="print-btn" class="icon-btn" title="Print report"><i class="fas fa-print"></i></button>
+                        </div>
+                    </div>
+
+                    <div id="welcome-state" class="empty-state">
+                        <i class="fas fa-laptop-medical"></i>
+                        <h3>Ready for Analysis</h3>
+                        <p>Results will appear here after you upload images and generate the report.</p>
+                    </div>
+
+                    <div id="loading-state" class="empty-state hidden">
+                        <div class="pulse-ring"></div>
+                        <h3>Analyzing Images...</h3>
+                        <p>Extracting spatial visual descriptors and interpreting clinical patterns.</p>
+                    </div>
+
+                    <div id="result-state" class="report-content hidden">
+                        <div class="report-header">
+                            <div class="patient-id">Study ID: <span id="display-id">REF-74291</span></div>
+                            <div class="date">Oct 24, 2023</div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3>Findings</h3>
+                            <p id="findings-text" class="typewriter"></p>
+                        </div>
+
+                        <div class="section highlight">
+                            <h3>Impression</h3>
+                            <p id="impression-text"></p>
+                        </div>
+
+                        <div class="disclaimer">
+                            <i class="fas fa-info-circle"></i>
+                            This report is AI-generated for diagnostic assistance. Final verification by a qualified radiologist is required.
+                        </div>
+                    </div>
+
+                    <div id="error-state" class="empty-state error hidden">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Occurred</h3>
+                        <p id="error-message">Something went wrong. Please try again.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2023 Multimodal Medical Diagnosis AI System</p>
+            <div class="tech-stack">
+                <span>FastAPI</span>
+                <span>PyTorch</span>
+                <span>Bio ClinicalBERT</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
