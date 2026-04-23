@@ -40,12 +40,18 @@
                 <div class="card upload-card glass">
                     <div class="card-header">
                         <h2><i class="fas fa-file-medical"></i> Image Uploads</h2>
-                        <span class="help-text">Up to 3 views supported</span>
+                        <div class="header-actions">
+                            <span class="help-text">Up to 3 views supported</span>
+                            <label id="folder-upload-btn" for="input-folder" class="secondary-btn small-btn">
+                                <i class="fas fa-folder-open"></i> Upload Study Folder
+                            </label>
+                            <input type="file" id="input-folder" webkitdirectory directory multiple hidden>
+                        </div>
                     </div>
                     
                     <div class="upload-zones">
                         <div class="upload-zone" id="zone-ap">
-                            <input type="file" id="input-ap" accept="image/*" hidden>
+                            <input type="file" id="input-ap" accept="image/*" multiple hidden>
                             <div class="zone-content">
                                 <i class="fas fa-camera-retro"></i>
                                 <span>AP View</span>
@@ -55,7 +61,7 @@
                         </div>
 
                         <div class="upload-zone" id="zone-pa">
-                            <input type="file" id="input-pa" accept="image/*" hidden>
+                            <input type="file" id="input-pa" accept="image/*" multiple hidden>
                             <div class="zone-content">
                                 <i class="fas fa-camera-retro"></i>
                                 <span>PA View</span>
@@ -65,7 +71,7 @@
                         </div>
 
                         <div class="upload-zone" id="zone-lateral">
-                            <input type="file" id="input-lateral" accept="image/*" hidden>
+                            <input type="file" id="input-lateral" accept="image/*" multiple hidden>
                             <div class="zone-content">
                                 <i class="fas fa-camera-retro"></i>
                                 <span>Lateral View</span>

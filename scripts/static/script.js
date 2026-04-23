@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorState = document.getElementById('error-state');
     const errorMessage = document.getElementById('error-message');
     
+    // Folder Upload elements
+    const folderInput = document.getElementById('input-folder');
+    const folderBtn = document.getElementById('folder-upload-btn');
+    
     // Report text elements
     const findingsText = document.getElementById('findings-text');
     const impressionText = document.getElementById('impression-text');
@@ -47,6 +51,91 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    checkStatus();
+
+    /**
+     * Folder Upload Handling
+     */
+    if (folderBtn && folderInput) {
+        // Log setup
+        console.log("Folder upload system initialization");
+
+        folderInput.addEventListener('change', (e) => {
+            try {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                console.log("Total files in folder:", files.length);
+
+                // Filter by extension (more reliable than MIME type on some Windows setups)
+                const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+                const imageFiles = files.filter(file => {
+                    const name = file.name.toLowerCase();
+                    return allowedExts.some(ext => name.endsWith(ext));
+                }).sort((a, b) => a.name.localeCompare(b.name));
+
+                // Reset state
+                Object.keys(zones).forEach(k => {
+                    zones[k].file = null;
+                    zones[k].preview.innerHTML = '';
+                    zones[k].preview.classList.remove('visible');
+                    zones[k].zone.classList.remove('active');
+                });
+
+                if (imageFiles.length === 0) {
+                    statusText.textContent = "Error: No images found";
+                    return;
+                }
+
+                // Distribution Logic
+                let filledCount = 0;
+                imageFiles.forEach(file => {
+                    const name = file.name.toLowerCase();
+                    let targetKey = null;
+
+                    // Prioritize exact view names first
+                    if (name.includes('ap.jpg') || name.includes('view_1')) targetKey = 'ap';
+                    else if (name.includes('pa.jpg') || name.includes('view_2')) targetKey = 'pa';
+                    else if (name.includes('lateral.jpg') || name.includes('view_3')) targetKey = 'lateral';
+
+                    if (targetKey && !zones[targetKey].file) {
+                        zones[targetKey].file = file;
+                        renderPreview(targetKey, file);
+                        filledCount++;
+                    }
+                });
+
+                // Fill remaining empty slots sequentially
+                const keys = ['ap', 'pa', 'lateral'];
+                imageFiles.forEach(file => {
+                    const emptyKey = keys.find(k => !zones[k].file);
+                    const alreadyUsed = Object.values(zones).some(z => z.file === file);
+                    if (emptyKey && !alreadyUsed) {
+                        zones[emptyKey].file = file;
+                        renderPreview(emptyKey, file);
+                        filledCount++;
+                    }
+                });
+
+                function renderPreview(key, file) {
+                    const reader = new FileReader();
+                    reader.onload = (re) => {
+                        zones[key].preview.innerHTML = `<img src="${re.target.result}" alt="Preview">`;
+                        zones[key].preview.classList.add('visible');
+                        zones[key].zone.classList.add('active');
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                statusText.textContent = `Success: ${filledCount} views loaded`;
+                setTimeout(updateGenerateButtonState, 100);
+            } catch (err) {
+                console.error("Folder upload failed:", err);
+                statusText.textContent = "Upload Error";
+            }
+        });
+    }
+
     /**
      * Handle File Upload Zones
      */
@@ -56,13 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Trigger file input on click
         zone.addEventListener('click', () => input.click());
 
-        // Handle file selection
+        // Handle file selection (Now supports multi-selection/distribution)
         input.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            if (files.length === 1) {
+                // Standard single file behavior
+                const file = files[0];
                 zones[key].file = file;
-                
-                // Show preview
                 const reader = new FileReader();
                 reader.onload = (re) => {
                     preview.innerHTML = `<img src="${re.target.result}" alt="Preview">`;
@@ -70,8 +161,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     zone.classList.add('active');
                 };
                 reader.readAsDataURL(file);
-                updateGenerateButtonState();
+            } else {
+                // Multi-selection behavior: Distribute files to empty slots
+                console.log(`Distributing ${files.length} files from ${key} slot`);
+                const slotKeys = ['ap', 'pa', 'lateral'];
+                let fileIdx = 0;
+                
+                slotKeys.forEach(sKey => {
+                    if (fileIdx < files.length) {
+                        const file = files[fileIdx++];
+                        zones[sKey].file = file;
+                        const reader = new FileReader();
+                        reader.onload = (re) => {
+                            zones[sKey].preview.innerHTML = `<img src="${re.target.result}" alt="Preview">`;
+                            zones[sKey].preview.classList.add('visible');
+                            zones[sKey].zone.classList.add('active');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
             }
+            updateGenerateButtonState();
         });
 
         // Drag and Drop
@@ -122,8 +232,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 displayId.textContent = `REF-${Math.floor(Math.random() * 90000) + 10000}`;
                 showState(resultState);
-                typeWriterEffect(findingsText, data.report.split('Impression:')[0].replace('Findings: ', '').trim());
-                impressionText.textContent = data.report.split('Impression:')[1]?.trim() || "No acute intrathoracic abnormality.";
+                
+                // Robust parsing for Findings/Impression (case-insensitive)
+                const report = data.report;
+                const impIndex = report.toLowerCase().indexOf('impression:');
+                
+                if (impIndex !== -1) {
+                    const findings = report.substring(0, impIndex).replace(/findings:/i, '').trim();
+                    const impression = report.substring(impIndex + 11).trim();
+                    typeWriterEffect(findingsText, findings || "No significant findings documented.");
+                    impressionText.textContent = impression || "Unremarkable.";
+                } else {
+                    typeWriterEffect(findingsText, report.replace(/findings:/i, '').trim());
+                    impressionText.textContent = "See findings above.";
+                }
             } else {
                 showError(data.detail || "Error generating report.");
             }

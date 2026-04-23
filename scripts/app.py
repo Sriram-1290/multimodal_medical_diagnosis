@@ -44,7 +44,13 @@ def load_resources():
         print("Loading tokenizer and model...")
         tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
         model = MedicalReportGenerator().to(device)
-        model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=device))
+        
+        checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            model.load_state_dict(checkpoint)
+            
         model.eval()
         print("Model loaded successfully.")
         return True
@@ -103,7 +109,7 @@ async def predict(
 
         # Generate report
         print("Running inference...")
-        report = model.generate(input_tensor, tokenizer, device=device, beam_size=5)
+        report = model.generate(input_tensor, tokenizer, k=5, repetition_penalty=2.0)
         
         return {
             "report": report,

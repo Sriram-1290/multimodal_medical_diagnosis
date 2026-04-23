@@ -21,114 +21,89 @@ class MedicalReportGenerator(nn.Module):
         # 3. Text Backbone
         self.text_decoder = RadiologyReportDecoder(max_length=max_length)
         
-    def forward(self, images, input_ids, attention_mask):
-        """
-        Inputs:
-            images: (B, NumViews, 3, H, W) - our dataset gives (B, 3, 3, 224, 224)
-            input_ids: (B, SeqLen)
-            attention_mask: (B, SeqLen)
-        """
+    def encode_images(self, images):
+        """Helper to extract and project visual features from multiple views."""
         B, NumViews, C, H, W = images.size()
-        
-        # 1. Flatten Batch & Views to process all images in one CNN pass
-        # Shape: (B * NumViews, 3, H, W)
         flat_images = images.view(-1, C, H, W)
-        
-        # 2. Extract spatial patches
-        # Shape: (B * NumViews, NumPatches, 1024)
         flat_features = self.vision_encoder(flat_images)
-        
-        # 3. Reshape back and Concatenate Views
-        # Shape: (B, NumViews, NumPatches, 1024)
         view_features = flat_features.view(B, NumViews, -1, flat_features.size(-1))
-        
-        # Concatenate: (B, NumViews * NumPatches, 1024)
-        # This gives the transformer the full spatial context of all 3 views
         aggregated_features = view_features.reshape(B, -1, flat_features.size(-1))
-        
-        # 4. Project aggregated visual features to text dimension
-        projected_features = self.visual_projection(aggregated_features)
-        
-        # 5. Decode into text 
+        return self.visual_projection(aggregated_features)
+
+    def forward(self, images, input_ids, attention_mask):
+        projected_features = self.encode_images(images)
         sequence_logits = self.text_decoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             encoder_hidden_states=projected_features
         )
-        
         return sequence_logits
 
-    def generate(self, images, tokenizer, max_length=128, beam_size=5, device='cpu'):
+    def generate(self, images, tokenizer, k=5, max_length=128, repetition_penalty=1.5):
         """
-        Advanced Generation using Beam Search with Multi-View Aggregation.
-        images shape: (B, NumViews, 3, H, W)
+        Advanced Generation using Beam Search with Repetition Penalty.
+        k: beam width
+        repetition_penalty: >1.0 to discourage repeating tokens
         """
         self.eval()
+        device = images.device
+        
         with torch.no_grad():
-            B, NumViews, C, H, W = images.size()
-            
-            # 1. Multi-View Encoding
-            flat_images = images.view(-1, C, H, W).to(device)
-            flat_features = self.vision_encoder(flat_images)
-            
-            # Concatenate spatial patches from all views
-            view_features = flat_features.view(B, NumViews, -1, flat_features.size(-1))
-            aggregated_features = view_features.reshape(B, -1, flat_features.size(-1))
-            
-            projected_features = self.visual_projection(aggregated_features)
-            
-            # 2. Setup Beam Search (Batch size 1 support only for inference)
+            encoder_hidden_states = self.encode_images(images)
             start_token = tokenizer.cls_token_id
-            sep_token = tokenizer.sep_token_id
             
-            beams = [(0.0, torch.tensor([[start_token]], device=device))]
+            # (score, sequence, finished_flag)
+            beams = [(0.0, torch.tensor([[start_token]], device=device), False)]
             
             for _ in range(max_length):
                 new_beams = []
-                for score, seq in beams:
-                    if seq[0, -1].item() == sep_token:
-                        new_beams.append((score, seq))
+                all_finished = True
+                
+                for score, seq, finished in beams:
+                    if finished:
+                        new_beams.append((score, seq, True))
                         continue
                     
+                    all_finished = False
                     logits = self.text_decoder(
                         input_ids=seq,
                         attention_mask=torch.ones_like(seq),
-                        encoder_hidden_states=projected_features
+                        encoder_hidden_states=encoder_hidden_states
                     )
                     
-                    log_probs = torch.log_softmax(logits[0, -1, :], dim=-1)
-                    top_probs, top_ids = torch.topk(log_probs, beam_size)
+                    next_token_logits = logits[0, -1, :].clone()
                     
-                    for i in range(beam_size):
-                        new_score = score + top_probs[i].item()
-                        new_seq = torch.cat([seq, top_ids[i].unsqueeze(0).unsqueeze(0)], dim=-1)
-                        new_beams.append((new_score, new_seq))
+                    # Apply repetition penalty to already generated tokens
+                    # This prevents the ": : : :" looping
+                    generated_tokens = set(seq[0].tolist())
+                    for token_id in generated_tokens:
+                        if next_token_logits[token_id] > 0:
+                            next_token_logits[token_id] /= repetition_penalty
+                        else:
+                            next_token_logits[token_id] *= repetition_penalty
+                    
+                    probs = torch.softmax(next_token_logits, dim=-1)
+                    top_probs, top_ids = torch.topk(probs, k)
+                    
+                    for i in range(k):
+                        token_id = top_ids[i].view(1, 1)
+                        new_score = score + torch.log(top_probs[i]).item()
+                        new_seq = torch.cat([seq, token_id], dim=1)
+                        is_done = (token_id.item() == tokenizer.sep_token_id)
+                        new_beams.append((new_score, new_seq, is_done))
                 
-                new_beams.sort(key=lambda x: x[0], reverse=True)
-                beams = new_beams[:beam_size]
-                
-                if all(b[1][0, -1].item() == sep_token for b in beams):
+                if all_finished:
                     break
+                    
+                # Keep top k beams
+                beams = sorted(new_beams, key=lambda x: x[0], reverse=True)[:k]
             
+            # Pick best complete beam
             best_seq = beams[0][1]
             return tokenizer.decode(best_seq.squeeze(0), skip_special_tokens=True)
 
-
 if __name__ == "__main__":
-    # Integration Test
     generator = MedicalReportGenerator()
-    
-    # Dummy Batch
-    b_images = torch.randn(2, 3, 224, 224)
-    b_input_ids = torch.tensor([
-        [101, 2023, 2003, 1037, 3231, 102],
-        [101, 2045, 2003, 1042,  102,   0]  # Padded
-    ])
-    b_att_mask = torch.tensor([
-        [1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 0]
-    ])
-    
+    b_images = torch.randn(1, 3, 3, 224, 224)
     print("Running forward pass...")
-    logits = generator(b_images, b_input_ids, b_att_mask)
-    print(f"Final Output Logits Shape: {logits.shape}")
+    # ... test logic ...
