@@ -55,3 +55,6 @@
 ## 9. Bug Fixes
 - [x] Resolve `OMP: Error #15` (Duplicate OpenMP runtime) in `train.py`.
 - [x] Install missing `tensorboard` dependency.
+
+## 10. Training Script Enhancements
+- [x] Add model parameter counting (total and trainable) to `train.py`.

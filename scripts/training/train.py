@@ -34,6 +34,15 @@ def train():
     tokenizer = AutoTokenizer.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
     model = MedicalReportGenerator(max_length=max_length).to(device)
 
+    # Count parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"\n{'='*30}")
+    print(f"Model Summary:")
+    print(f"Total Parameters:     {total_params:,}")
+    print(f"Trainable Parameters: {trainable_params:,}")
+    print(f"{'='*30}\n")
+
     # 2. Differential Learning Rates (LOWERED for stability)
     pretrained_params = []
     new_params = []
@@ -45,7 +54,7 @@ def train():
 
     optimizer = torch.optim.AdamW([
         {'params': pretrained_params, 'lr': 1e-5}, # Lowered from 2e-5
-        {'params': new_params, 'lr': 4e-5}         # Lowered from 1e-4
+        {'params': new_params, 'lr': 4e-4}         # Lowered from 1e-4
     ], weight_decay=0.01)
     
     # 3. Resume Logic
