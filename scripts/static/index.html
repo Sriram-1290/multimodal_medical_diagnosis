@@ -3,151 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedAI | Multimodal Radiology Assistant</title>
-    <link rel="stylesheet" href="style.css">
+    <title>InsightCXR — AI Multi-View Radiology Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="background-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
-    </div>
-
     <div class="app-container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-microscope"></i>
-                <span>MedAI <span>Assistant</span></span>
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>InsightCXR</h1>
+                    <span>AI Multi-View Chest Radiology Copilot</span>
+                </div>
             </div>
-            <div id="status-badge" class="status-badge checking">
-                <span class="dot"></span>
-                <span class="status-text">Checking System...</span>
+            <div class="header-status">
+                <div id="connection-status" class="status-indicator offline">
+                    <span class="status-dot"></span>
+                    <span class="status-text">DISCONNECTED</span>
+                </div>
+                <div id="device-info" class="device-badge">DEVICE: --</div>
             </div>
         </header>
 
-        <main>
-            <section class="hero">
-                <h1>AI-Powered <span>Radiology Reports</span></h1>
-                <p>Upload Chest X-Ray studies (AP, PA, and Lateral) to generate high-fidelity clinical findings and impressions using deep learning.</p>
+        <!-- MAIN LAYOUT -->
+        <main class="app-body">
+            <!-- LEFT COLUMN: CASES -->
+            <section class="panel-column cases-sidebar">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <h2>CASE ARCHIVE</h2>
+                    </div>
+                    <span class="badge">10 SAMPLES</span>
+                </div>
+                <p class="panel-desc">Select a preset clinical case to populate multi-view scans and ground truth reports automatically.</p>
+                
+                <div class="samples-grid">
+                    <button class="sample-btn" data-sample="1">Case 01</button>
+                    <button class="sample-btn" data-sample="2">Case 02</button>
+                    <button class="sample-btn" data-sample="3">Case 03</button>
+                    <button class="sample-btn" data-sample="4">Case 04</button>
+                    <button class="sample-btn" data-sample="5">Case 05</button>
+                    <button class="sample-btn" data-sample="6">Case 06</button>
+                    <button class="sample-btn" data-sample="7">Case 07</button>
+                    <button class="sample-btn" data-sample="8">Case 08</button>
+                    <button class="sample-btn" data-sample="9">Case 09</button>
+                    <button class="sample-btn" data-sample="10">Case 10</button>
+                </div>
+
+                <div class="ground-truth-panel card">
+                    <div class="card-header">
+                        <h3>GROUND TRUTH REPORT</h3>
+                        <span class="ref-badge">REFERENCE</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ground-truth-text" class="placeholder-text">
+                            Select a sample case from the archive above to display the clinical ground truth report.
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <div class="dashboard-grid">
-                <!-- Upload Section -->
-                <div class="card upload-card glass">
-                    <div class="card-header">
-                        <h2><i class="fas fa-file-medical"></i> Image Uploads</h2>
-                        <div class="header-actions">
-                            <span class="help-text">Up to 3 views supported</span>
-                            <label id="folder-upload-btn" for="input-folder" class="secondary-btn small-btn">
-                                <i class="fas fa-folder-open"></i> Upload Study Folder
-                            </label>
-                            <input type="file" id="input-folder" webkitdirectory directory multiple hidden>
+            <!-- CENTER COLUMN: PACS WORKSPACE -->
+            <section class="panel-column workspace-center">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                        </svg>
+                        <h2>PACS CLINICAL WORKSPACE</h2>
+                    </div>
+                    <div class="workspace-actions">
+                        <button id="clear-workspace-btn" class="text-btn">Reset All</button>
+                    </div>
+                </div>
+
+                <!-- VIEWPORTS GRID -->
+                <div class="viewports-grid">
+                    <!-- AP VIEWPORT -->
+                    <div class="viewport-card card" data-view="ap">
+                        <div class="viewport-header">
+                            <span class="view-tag">VIEW: AP (ANTEROPOSTERIOR)</span>
+                            <div class="viewport-tools">
+                                <button class="tool-btn invert-btn" title="Invert Colors">INV</button>
+                                <button class="tool-btn caliper-btn" title="Measure Caliper">📏</button>
+                                <button class="tool-btn reset-view-btn" title="Reset Viewport">RST</button>
+                            </div>
+                        </div>
+                        <div class="viewport-canvas-container">
+                            <div class="canvas-overlay dropzone" id="dropzone-ap">
+                                <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span class="upload-text">DRAG & DROP AP CXR OR CLICK TO UPLOAD</span>
+                                <input type="file" id="input-ap" accept="image/*" class="file-input">
+                            </div>
+                            <canvas id="canvas-ap" class="viewport-canvas hidden"></canvas>
+                            <div class="viewport-hud hidden">
+                                <span class="hud-item zoom-hud">Z: 100%</span>
+                                <span class="hud-item calipers-hud"></span>
+                            </div>
+                        </div>
+                        <div class="viewport-controls hidden">
+                            <div class="control-row">
+                                <label>BRIGHTNESS</label>
+                                <input type="range" class="brightness-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="control-row">
+                                <label>CONTRAST</label>
+                                <input type="range" class="contrast-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="preset-row">
+                                <button class="preset-btn active" data-preset="default">DEFAULT</button>
+                                <button class="preset-btn" data-preset="lung">LUNG DETAIL</button>
+                                <button class="preset-btn" data-preset="bone">BONE DETAIL</button>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="upload-zones">
-                        <div class="upload-zone" id="zone-ap">
-                            <input type="file" id="input-ap" accept="image/*" multiple hidden>
-                            <div class="zone-content">
-                                <i class="fas fa-camera-retro"></i>
-                                <span>AP View</span>
-                                <p>Click or drag image</p>
-                            </div>
-                            <div class="preview-container" id="preview-ap"></div>
-                        </div>
 
-                        <div class="upload-zone" id="zone-pa">
-                            <input type="file" id="input-pa" accept="image/*" multiple hidden>
-                            <div class="zone-content">
-                                <i class="fas fa-camera-retro"></i>
-                                <span>PA View</span>
-                                <p>Click or drag image</p>
+                    <!-- PA VIEWPORT -->
+                    <div class="viewport-card card" data-view="pa">
+                        <div class="viewport-header">
+                            <span class="view-tag">VIEW: PA (POSTEROANTERIOR)</span>
+                            <div class="viewport-tools">
+                                <button class="tool-btn invert-btn" title="Invert Colors">INV</button>
+                                <button class="tool-btn caliper-btn" title="Measure Caliper">📏</button>
+                                <button class="tool-btn reset-view-btn" title="Reset Viewport">RST</button>
                             </div>
-                            <div class="preview-container" id="preview-pa"></div>
                         </div>
-
-                        <div class="upload-zone" id="zone-lateral">
-                            <input type="file" id="input-lateral" accept="image/*" multiple hidden>
-                            <div class="zone-content">
-                                <i class="fas fa-camera-retro"></i>
-                                <span>Lateral View</span>
-                                <p>Click or drag image</p>
+                        <div class="viewport-canvas-container">
+                            <div class="canvas-overlay dropzone" id="dropzone-pa">
+                                <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span class="upload-text">DRAG & DROP PA CXR OR CLICK TO UPLOAD</span>
+                                <input type="file" id="input-pa" accept="image/*" class="file-input">
                             </div>
-                            <div class="preview-container" id="preview-lateral"></div>
+                            <canvas id="canvas-pa" class="viewport-canvas hidden"></canvas>
+                            <div class="viewport-hud hidden">
+                                <span class="hud-item zoom-hud">Z: 100%</span>
+                                <span class="hud-item calipers-hud"></span>
+                            </div>
+                        </div>
+                        <div class="viewport-controls hidden">
+                            <div class="control-row">
+                                <label>BRIGHTNESS</label>
+                                <input type="range" class="brightness-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="control-row">
+                                <label>CONTRAST</label>
+                                <input type="range" class="contrast-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="preset-row">
+                                <button class="preset-btn active" data-preset="default">DEFAULT</button>
+                                <button class="preset-btn" data-preset="lung">LUNG DETAIL</button>
+                                <button class="preset-btn" data-preset="bone">BONE DETAIL</button>
+                            </div>
                         </div>
                     </div>
 
-                    <button id="generate-btn" class="primary-btn disabled" disabled>
-                        <span class="btn-text">Generate Medical Report</span>
-                        <div class="loader-spinner"></div>
+                    <!-- LATERAL VIEWPORT -->
+                    <div class="viewport-card card" data-view="lateral">
+                        <div class="viewport-header">
+                            <span class="view-tag">VIEW: LATERAL</span>
+                            <div class="viewport-tools">
+                                <button class="tool-btn invert-btn" title="Invert Colors">INV</button>
+                                <button class="tool-btn caliper-btn" title="Measure Caliper">📏</button>
+                                <button class="tool-btn reset-view-btn" title="Reset Viewport">RST</button>
+                            </div>
+                        </div>
+                        <div class="viewport-canvas-container">
+                            <div class="canvas-overlay dropzone" id="dropzone-lateral">
+                                <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span class="upload-text">DRAG & DROP LATERAL CXR OR CLICK TO UPLOAD</span>
+                                <input type="file" id="input-lateral" accept="image/*" class="file-input">
+                            </div>
+                            <canvas id="canvas-lateral" class="viewport-canvas hidden"></canvas>
+                            <div class="viewport-hud hidden">
+                                <span class="hud-item zoom-hud">Z: 100%</span>
+                                <span class="hud-item calipers-hud"></span>
+                            </div>
+                        </div>
+                        <div class="viewport-controls hidden">
+                            <div class="control-row">
+                                <label>BRIGHTNESS</label>
+                                <input type="range" class="brightness-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="control-row">
+                                <label>CONTRAST</label>
+                                <input type="range" class="contrast-slider" min="-100" max="100" value="0">
+                            </div>
+                            <div class="preset-row">
+                                <button class="preset-btn active" data-preset="default">DEFAULT</button>
+                                <button class="preset-btn" data-preset="lung">LUNG DETAIL</button>
+                                <button class="preset-btn" data-preset="bone">BONE DETAIL</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: ANALYTICS & REPORTS -->
+            <section class="panel-column diagnostics-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <h2>DIAGNOSTIC ENGINE</h2>
+                    </div>
+                </div>
+
+                <!-- DIAGNOSTIC ACTUATOR -->
+                <div class="action-card card">
+                    <button id="run-inference-btn" class="inference-btn">
+                        <span class="btn-glow"></span>
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>RUN AI DIAGNOSTIC REPORT</span>
                     </button>
                 </div>
 
-                <!-- Result Section -->
-                <div class="card result-card glass">
-                    <div class="card-header">
-                        <h2><i class="fas fa-notes-medical"></i> Diagnostic Results</h2>
-                        <div class="action-buttons">
-                            <button id="copy-btn" class="icon-btn" title="Copy to clipboard"><i class="far fa-copy"></i></button>
-                            <button id="print-btn" class="icon-btn" title="Print report"><i class="fas fa-print"></i></button>
-                        </div>
+                <!-- LOADING SHIELD -->
+                <div id="loader-shield" class="loader-shield hidden">
+                    <div class="pulse-ring"></div>
+                    <div class="scanner-container">
+                        <div class="scanner-grid"></div>
+                        <div class="scan-bar"></div>
                     </div>
-
-                    <div id="welcome-state" class="empty-state">
-                        <i class="fas fa-laptop-medical"></i>
-                        <h3>Ready for Analysis</h3>
-                        <p>Results will appear here after you upload images and generate the report.</p>
-                    </div>
-
-                    <div id="loading-state" class="empty-state hidden">
-                        <div class="pulse-ring"></div>
-                        <h3>Analyzing Images...</h3>
-                        <p>Extracting spatial visual descriptors and interpreting clinical patterns.</p>
-                    </div>
-
-                    <div id="result-state" class="report-content hidden">
-                        <div class="report-header">
-                            <div class="patient-id">Study ID: <span id="display-id">REF-74291</span></div>
-                            <div class="date">Oct 24, 2023</div>
-                        </div>
-                        
-                        <div class="section">
-                            <h3>Findings</h3>
-                            <p id="findings-text" class="typewriter"></p>
-                        </div>
-
-                        <div class="section highlight">
-                            <h3>Impression</h3>
-                            <p id="impression-text"></p>
-                        </div>
-
-                        <div class="disclaimer">
-                            <i class="fas fa-info-circle"></i>
-                            This report is AI-generated for diagnostic assistance. Final verification by a qualified radiologist is required.
-                        </div>
-                    </div>
-
-                    <div id="error-state" class="empty-state error hidden">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error Occurred</h3>
-                        <p id="error-message">Something went wrong. Please try again.</p>
+                    <div class="loader-text-block">
+                        <p class="loader-title">ANALYZING RADIOLOGY INPUTS</p>
+                        <p class="loader-subtitle">Fusing AP, PA, and Lateral features via Bio_ClinicalBERT...</p>
                     </div>
                 </div>
-            </div>
-        </main>
 
-        <footer>
-            <p>&copy; 2023 Multimodal Medical Diagnosis AI System</p>
-            <div class="tech-stack">
-                <span>FastAPI</span>
-                <span>PyTorch</span>
-                <span>Bio ClinicalBERT</span>
-            </div>
-        </footer>
+                <!-- OUTPUT DISPLAY -->
+                <div id="diagnostic-results" class="results-container hidden">
+                    <!-- REPORT SECTION -->
+                    <div class="result-card card animated-fade-in">
+                        <div class="card-header">
+                            <h3>AI GENERATED REPORT</h3>
+                            <div class="header-tools">
+                                <button id="tts-btn" class="icon-btn" title="Listen to Report">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    </svg>
+                                </button>
+                                <button id="export-pdf-btn" class="icon-btn" title="Export PDF">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body scrollable">
+                            <div id="ai-report-output" class="report-content-box">
+                                <!-- Generated text goes here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PATHOLOGY SCORECARD -->
+                    <div class="result-card card score-card animated-fade-in delay-1">
+                        <div class="card-header">
+                            <h3>CLASSIFICATION SCORECARD</h3>
+                            <span class="badge secondary">NLP ESTIMATE</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="scorecard-grid">
+                                <div class="scorecard-row" data-pathology="effusion">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Pleural Effusion</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                                <div class="scorecard-row" data-pathology="atelectasis">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Atelectasis</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                                <div class="scorecard-row" data-pathology="cardiomegaly">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Cardiomegaly</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                                <div class="scorecard-row" data-pathology="pneumothorax">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Pneumothorax</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                                <div class="scorecard-row" data-pathology="edema">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Pulmonary Edema</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                                <div class="scorecard-row" data-pathology="consolidation">
+                                    <div class="pathology-meta">
+                                        <span class="pathology-name">Consolidation</span>
+                                        <span class="pathology-val">0%</span>
+                                    </div>
+                                    <div class="progress-bar-track">
+                                        <div class="progress-bar-fill level-low"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IDLE PLACEHOLDER -->
+                <div id="results-placeholder" class="results-placeholder">
+                    <div class="placeholder-icon-ring">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <h3>Waiting for Analysis</h3>
+                    <p>Load a sample case or upload individual views, then press the trigger button above to calculate diagnoses.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- TTS Dictation Wave Indicator Overlay -->
+    <div id="tts-audio-overlay" class="audio-overlay hidden">
+        <div class="audio-wave">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+        </div>
+        <span>PLAYING CLINICAL DICTATION FEED...</span>
+        <button id="tts-stop-btn">STOP</button>
+    </div>
+
+    <!-- Print Formatted Container (Hidden normally) -->
+    <div id="print-report-container" class="print-only">
+        <div class="print-header">
+            <h2>InsightCXR Radiology Report</h2>
+            <p><strong>Date of Analysis:</strong> <span class="print-date"></span></p>
+            <p><strong>Diagnosis System:</strong> AI Multi-View Radiology Dashboard</p>
+        </div>
+        <hr>
+        <div class="print-report-body">
+            <h3>AI GENERATED CLINICAL FINDINGS</h3>
+            <div id="print-findings-text"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>

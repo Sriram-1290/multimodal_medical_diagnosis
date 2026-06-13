@@ -58,3 +58,11 @@
 
 ## 10. Training Script Enhancements
 - [x] Add model parameter counting (total and trainable) to `train.py`.
+
+## 11. Frontend Overhaul (Redo From Scratch)
+- [ ] Create HTML structure (`scripts/static/index.html`) with dual-pane layout and DICOM-style canvas slots.
+- [ ] Create styles (`scripts/static/style.css`) using clinical dark-mode theme, glowing borders, and interactive hover effects.
+- [ ] Create frontend logic (`scripts/static/script.js`) with image uploading, canvas image adjustment filters, and sample loaders.
+- [ ] Implement backend state polling and model status display in the header.
+- [ ] Implement prediction handler (`/api/predict`) with scanner loading animations and side-by-side ground truth comparisons.
+- [ ] Perform manual verification in the browser to ensure full functionality.
