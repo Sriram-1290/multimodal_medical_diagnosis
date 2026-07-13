@@ -429,7 +429,6 @@ async function checkBackendStatus() {
 // SAMPLE ARCHIVE LOADER
 function setupSampleArchiver() {
     const sampleBtns = document.querySelectorAll('.sample-btn');
-    const groundTruthBox = document.getElementById('ground-truth-text');
 
     sampleBtns.forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -444,24 +443,6 @@ function setupSampleArchiver() {
             document.getElementById('diagnostic-results').classList.add('hidden');
             document.getElementById('results-placeholder').classList.remove('hidden');
             stopTTSPlayback();
-
-            // Load ground truth
-            groundTruthBox.textContent = "Loading ground truth text...";
-            groundTruthBox.className = "placeholder-text";
-
-            try {
-                const gtRes = await fetch(`/samples/sample_${sampleNum}/ground_truth.txt`);
-                if (gtRes.ok) {
-                    const text = await gtRes.text();
-                    groundTruthBox.textContent = text.trim();
-                    groundTruthBox.className = "active";
-                } else {
-                    groundTruthBox.textContent = "Ground truth file not found for this case.";
-                    groundTruthBox.className = "placeholder-text";
-                }
-            } catch (err) {
-                groundTruthBox.textContent = "Error loading clinical reference.";
-            }
 
             // Load images into viewports
             const imageViews = ['ap', 'pa', 'lateral'];
@@ -495,9 +476,6 @@ function setupSampleArchiver() {
 function clearAllWorkspace() {
     activeSampleIndex = null;
     document.querySelectorAll('.sample-btn').forEach(btn => btn.classList.remove('active'));
-    
-    document.getElementById('ground-truth-text').textContent = "Select a sample case from the archive above to display the clinical ground truth report.";
-    document.getElementById('ground-truth-text').className = "placeholder-text";
 
     Object.values(viewports).forEach(vp => vp.clear());
 

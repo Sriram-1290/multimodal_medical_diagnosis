@@ -250,18 +250,6 @@ body {
     color: var(--text-secondary);
     border: 1px solid rgba(148, 163, 184, 0.2);
 }
-
-.ref-badge {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--accent-amber);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
 /* LEFT SIDEBAR: CASE ARCHIVE */
 .cases-sidebar {
     gap: 0.5rem;
@@ -297,27 +285,6 @@ body {
     color: var(--accent-blue);
     border-color: var(--accent-blue);
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
-}
-
-.ground-truth-panel {
-    flex-grow: 1;
-}
-
-.ground-truth-panel .card-body {
-    overflow-y: auto;
-    max-height: 280px;
-    line-height: 1.6;
-}
-
-#ground-truth-text {
-    font-size: 0.8rem;
-    font-style: italic;
-    color: var(--text-secondary);
-}
-
-#ground-truth-text.active {
-    font-style: normal;
-    color: var(--text-primary);
 }
 
 /* CENTER COLUMN: PACS WORKSPACE */
