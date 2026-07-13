@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  medical-diagnosis-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medical_diagnosis_app
+    ports:
+      - "8000:8000"
+    environment:
+      - KMP_DUPLICATE_LIB_OK=TRUE
+      - HF_HUB_DISABLE_SYMLINKS_WARNING=1
+    volumes:
+      # Mount models folder so that check-pointed weights can be persisted/loaded easily without rebuild
+      - ./models:/app/models
+      # Mount data folder if access to local datasets or logs is required
+      - ./data:/app/data
+    restart: unless-stopped
+    # Uncomment the block below to enable GPU access within the container (requires NVIDIA Container Toolkit on host)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]

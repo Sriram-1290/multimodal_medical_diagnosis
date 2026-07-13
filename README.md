@@ -129,9 +129,9 @@ The project includes a premium, interactive web dashboard for real-time inferenc
 | **Vision Backbone** | DenseNet-121 (pretrained) |
 | **Language Backbone** | Bio_ClinicalBERT |
 | **Max Seq Length** | 512 tokens |
-| **Batch Size** | 2 (Optimized for Multi-View VRAM) |
-| **Learning Rate** | 5e-5 |
-| **Optimizer** | AdamW |
+| **Batch Size** | 4 (Effective batch size 16 via Gradient Accumulation = 4) |
+| **Learning Rate** | Differential: `1e-5` (pretrained) / `4e-4` (new layers) |
+| **Optimizer** | AdamW (weight decay = 0.01) |
 | **Loss Function** | CrossEntropy (ignoring padding) |
 
 ---

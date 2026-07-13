@@ -21,5 +21,5 @@ if __name__ == "__main__":
     dummy_img = torch.randn(1, 3, 3, 224, 224).to(device)
     
     print("Generating report (Beam Search)...")
-    report = model.generate(dummy_img, tokenizer, device=device, beam_size=5)
+    report = model.generate(dummy_img, tokenizer, k=5)
     print(f"Generated Report: {report}")

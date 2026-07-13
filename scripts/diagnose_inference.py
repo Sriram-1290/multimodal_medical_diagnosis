@@ -19,7 +19,11 @@ def test_inference_difference():
     print("Loading resources...")
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     model = MedicalReportGenerator().to(device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+        model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
 
     transform = transforms.Compose([
@@ -35,7 +39,7 @@ def test_inference_difference():
     def get_report(img):
         # (1, 3, 3, 224, 224)
         input_tensor = torch.stack([img, torch.zeros_like(img), torch.zeros_like(img)]).unsqueeze(0).to(device)
-        report = model.generate(input_tensor, tokenizer, device=device, beam_size=1) # Greedy for speed
+        report = model.generate(input_tensor, tokenizer, k=1) # Greedy for speed (k=1)
         return report
 
     print("Inference 1...")

@@ -303,7 +303,7 @@ The model uses **two parameter groups** with different learning rates:
 | Parameter Group | LR | Rationale |
 |:---|:---|:---|
 | Pretrained (DenseNet + BERT core) | `1e-5` | Preserve pre-trained knowledge |
-| New (cross-attention + projection) | `4e-5` | Faster adaptation for new layers |
+| New (cross-attention + projection) | `4e-4` | Faster adaptation for new layers |
 
 #### Gradient Accumulation
 With `accumulation_steps=4` and `batch_size=4`, the effective batch size is **16**. This allows training with multi-view inputs on limited VRAM.
@@ -574,7 +574,7 @@ Final Output                  string                   Decoded best beam
 
 | Decision | Choice | Rationale |
 |:---|:---|:---|
-| **Differential LR** | 1e-5 pretrained / 4e-5 new | Prevents catastrophic forgetting of ImageNet + clinical knowledge |
+| **Differential LR** | 1e-5 pretrained / 4e-4 new | Prevents catastrophic forgetting of ImageNet + clinical knowledge |
 | **Gradient accumulation** | 4 steps (eff. batch=16) | Multi-view inputs are VRAM-intensive; accumulation simulates larger batches |
 | **Mixed precision** | FP16 via AMP | ~2× speedup, ~40% memory reduction with minimal accuracy loss |
 | **Checkpointing** | Full state (model + optimizer + epoch + best_loss) | Enables seamless training resumption without loss spikes |

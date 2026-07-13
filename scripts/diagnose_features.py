@@ -12,7 +12,11 @@ def check_feature_variation():
     checkpoint_path = "models/checkpoints/best_model.pth"
     
     model = MedicalReportGenerator().to(device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+        model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
 
     img1 = torch.randn(1, 3, 3, 224, 224).to(device)
@@ -23,8 +27,8 @@ def check_feature_variation():
         f1 = model.vision_encoder(img1.view(-1, 3, 224, 224))
         f2 = model.vision_encoder(img2.view(-1, 3, 224, 224))
         
-        v1 = model.visual_projection(f1.view(1, -1, 1024))
-        v2 = model.visual_projection(f2.view(1, -1, 1024))
+        v1 = model.visual_projection(f1.reshape(1, -1, 1024))
+        v2 = model.visual_projection(f2.reshape(1, -1, 1024))
         
         print(f"Features 1 (mean): {v1.mean().item():.6f}")
         print(f"Features 2 (mean): {v2.mean().item():.6f}")
